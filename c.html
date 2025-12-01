@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C Programming Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden; /* Prevent scrolling */
+        }
+        .quiz-container {
+            width: 80%;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .question {
+            display: none;
+        }
+        .question.active {
+            display: block;
+        }
+        .options {
+            margin: 10px 0;
+        }
+        .options label {
+            display: block;
+            margin: 5px 0;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .timer {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .review {
+            color: orange;
+        }
+        .marked {
+            background: #fff3cd;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" id="warningOverlay">
+        <div>
+            <p>You cannot switch tabs or exit full-screen during the quiz. Please return to the quiz immediately.</p>
+            <button onclick="dismissWarning()">I Understand</button>
+        </div>
+    </div>
+    <div class="quiz-container">
+        <div class="timer">Time Left: <span id="time">40:00</span></div>
+        <form id="quizForm">
+            <!-- Questions will be inserted here by JS -->
+        </form>
+        <div class="navigation">
+            <button id="prevBtn">Previous</button>
+            <button id="markReviewBtn">Mark for Review</button>
+            <button id="nextBtn">Next</button>
+            <button id="submitBtn" style="display: none;">Submit Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "11. Which keyword is used to skip current iteration in a loop?",
+                options: ["A) break", "B) jump", "C) skip", "D) continue"],
+                answer: "D"
+            },
+            {
+                question: "12. The switch statement works with:",
+                options: ["A) double", "B) float", "C) char and int", "D) array"],
+                answer: "C"
+            },
+            {
+                question: "13. Which operator has the highest precedence?",
+                options: ["A) +", "B) %", "C) *", "D) ="],
+                answer: "C"
+            },
+            {
+                question: "14. Which of the following is an entry-controlled loop?",
+                options: ["A) do-while", "B) for", "C) both A and B", "D) none"],
+                answer: "B"
+            },
+            {
+                question: "15. What will be the output of printf(\"%d\", 10/3);?",
+                options: ["A) 3.33", "B) 3", "C) 10/3", "D) 0"],
+                answer: "B"
+            },
+            {
+                question: "16. An array is a collection of:",
+                options: ["A) different data types", "B) similar data types", "C) characters only", "D) integers only"],
+                answer: "B"
+            },
+            {
+                question: "17. Array index always starts from:",
+                options: ["A) -1", "B) 0", "C) 1", "D) any value"],
+                answer: "B"
+            },
+            {
+                question: "18. Which is the correct declaration of an array?",
+                options: ["A) int arr[];", "B) int arr;", "C) arr[10];", "D) array arr[10];"],
+                answer: "A"
+            },
+            {
+                question: "19. What is the size of int typically in C?",
+                options: ["A) 2 bytes", "B) 4 bytes", "C) 8 bytes", "D) depends on compiler"],
+                answer: "D"
+            },
+            {
+                question: "20. The number of elements in int a[10] is:",
+                options: ["A) 9", "B) 10", "C) 11", "D) undefined"],
+                answer: "B"
+            },
+            {
+                question: "21. Accessing array elements beyond its size results in:",
+                options: ["A) error", "B) warning", "C) undefined behavior", "D) correct output"],
+                answer: "C"
+            },
+            {
+                question: "22. Which loop is best for traversing arrays?",
+                options: ["A) while", "B) do-while", "C) for", "D) switch"],
+                answer: "C"
+            },
+            {
+                question: "23. Which of the following is a valid array initialization?",
+                options: ["A) int a[3]={1,2,3};", "B) int a={1,2,3};", "C) int a(3)={1,2,3};", "D) int a[3]={1;2;3};"],
+                answer: "A"
+            },
+            {
+                question: "24. What will sizeof(int a[5]) return?",
+                options: ["A) 5", "B) depends on compiler", "C) 10", "D) 20 (if int = 4 bytes)"],
+                answer: "D"
+            },
+            {
+                question: "25. Which header file is needed for printf() and scanf()?",
+                options: ["A) stdio.lib", "B) stdio.h", "C) conio.h", "D) string.h"],
+                answer: "B"
+            },
+            {
+                question: "26. Which function is the mandatory starting point for the execution of a C program?",
+                options: ["A) start()", "B) begin()", "C) main()", "D) program()"],
+                answer: "C"
+            },
+            {
+                question: "27. In sequential programming flow, how are statements executed?",
+                options: ["A) Randomly, based on memory", "B) Based on conditions", "C) Repeatedly in a cycle", "D) One after the other, in the order they appear"],
+                answer: "D"
+            },
+            {
+                question: "28. What character is used to terminate a statement in C?",
+                options: ["A) Colon ( : )", "B) Comma ( , )", "C) Semicolon ( ; )", "D) Period ( . )"],
+                answer: "C"
+            },
+            {
+                question: "29. What is the primary purpose of the #include <stdio.h> directive?",
+                options: ["A) To define constants", "B) To start a loop", "C) To include standard Input/Output library functions (like printf and scanf)", "D) To declare the main function"],
+                answer: "C"
+            },
+            {
+                question: "30. Which escape sequence is used to insert a newline character?",
+                options: ["A) \\t", "B) \\r", "C) \\n", "D) \\\\"],
+                answer: "C"
+            },
+            {
+                question: "31. Which statement is used for decision-making and selecting one block of code to execute from multiple options?",
+                options: ["A) for loop", "B) if-else", "C) while loop", "D) goto statement"],
+                answer: "B"
+            },
+            {
+                question: "32. If you have many possible conditions to check (e.g., grading A, B, C, D, F), which conditional structure is generally the most efficient and readable?",
+                options: ["A) Nested if-else", "B) switch statement", "C) do-while loop", "D) Simple if statement"],
+                answer: "B"
+            },
+            {
+                question: "33. What is the keyword used to exit a switch statement once a case is executed?",
+                options: ["A) continue", "B) exit", "C) default", "D) break"],
+                answer: "D"
+            },
+            {
+                question: "34. The ternary operator in C is a shorthand for which type of conditional statement?",
+                options: ["A) switch", "B) if-else", "C) do-while", "D) for"],
+                answer: "B"
+            },
+            {
+                question: "35. The expression within an if statement evaluates to what type of value to determine the flow of execution?",
+                options: ["A) Character", "B) String", "C) Boolean (non-zero for true, zero for false)", "D) Floating point"],
+                answer: "C"
+            },
+            {
+                question: "36. Which type of loop executes the body at least once, regardless of the condition?",
+                options: ["A) while loop", "B) for loop", "C) do-while loop", "D) Infinite loop"],
+                answer: "C"
+            },
+            {
+                question: "37. The for loop combines which three key elements in its header?",
+                options: ["A) Start, Stop, Action", "B) Initialization, Condition, Iteration (Update)", "C) Variable, Value, Print", "D) Data type, Name, Size"],
+                answer: "B"
+            },
+            {
+                question: "38. What happens if the condition in a while loop is initially false?",
+                options: ["A) The loop executes once.", "B) The program crashes.", "C) The body of the loop is skipped entirely.", "D) The program enters an infinite loop."],
+                answer: "C"
+            },
+            {
+                question: "39. What is the common term for a loop whose condition never becomes false?",
+                options: ["A) Doomed loop", "B) for loop", "C) Infinite loop", "D) Fixed loop"],
+                answer: "C"
+            },
+            {
+                question: "40. Which operator is most commonly used as the update/iteration part of a simple counting loop (e.g., i++)?",
+                options: ["A) Arithmetic", "B) Relational", "C) Logical", "D) Increment/Decrement"],
+                answer: "D"
+            },
+            {
+                question: "41. Which jump statement is used to immediately exit the current loop (either for, while, or do-while) entirely?",
+                options: ["A) goto", "B) break", "C) return", "D) continue"],
+                answer: "B"
+            },
+            {
+                question: "42. Which jump statement skips the rest of the current iteration of a loop and moves execution to the loop's condition check and update?",
+                options: ["A) break", "B) exit", "C) continue", "D) goto"],
+                answer: "C"
+            },
+            {
+                question: "43. The goto statement causes a jump in program execution to a specific location marked by a(n):",
+                options: ["A) Variable name", "B) Function call", "C) Label", "D) Comment"],
+                answer: "C"
+            },
+            {
+                question: "44. While break is used to exit a loop or switch, which statement is used to exit the entire function (and often the program's main function)?",
+                options: ["A) exit()", "B) goto", "C) return", "D) continue"],
+                answer: "C"
+            }
+        ];
+
+        let currentQuestion = 0;
+        let answers = new Array(questions.length).fill(null);
+        let markedForReview = new Array(questions.length).fill(false);
+        let timeLeft = 40 * 60; // 40 minutes in seconds
+        let timerInterval;
+        let warningShown = false;
+
+        function loadQuestions() {
+            const form = document.getElementById('quizForm');
+            questions.forEach((q, index) => {
+                const div = document.createElement('div');
+                div.className = 'question';
+                div.innerHTML = `
+                    <h3>${q.question}</h3>
+                    <div class="options">
+                        ${q.options.map((opt, i) => `
+                            <label>
+                                <input type="radio" name="q${index}" value="${opt.charAt(0)}" ${answers[index] === opt.charAt(0) ? 'checked' : ''}>
+                                ${opt}
+                            </label>
+                        `).join('')}
+                    </div>
+                `;
+                form.appendChild(div);
+            });
+            showQuestion(currentQuestion);
+        }
+
+        function showQuestion(index) {
+            document.querySelectorAll('.question').forEach((q, i) => {
+                q.classList.toggle('active', i === index);
+                if (markedForReview[i]) {
+                    q.classList.add('marked');
+                } else {
+                    q.classList.remove('marked');
+                }
+            });
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').style.display = index === questions.length - 1 ? 'none' : 'inline';
+            document.getElementById('submitBtn').style.display = index === questions.length - 1 ? 'inline' : 'none';
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('time').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    submitQuiz();
+                }
+            }, 1000);
+        }
+
+        function enterFullscreen() {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.mozRequestFullScreen) { // Firefox
+                document.documentElement.mozRequestFullScreen();
+            } else if (document.documentElement.webkitRequestFullscreen) { // Chrome, Safari
+                document.documentElement.webkitRequestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
+                document.documentElement.msRequestFullscreen();
+            }
+        }
+
+        function handleFullscreenChange() {
+            if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                showWarning();
+                enterFullscreen();
+            }
+        }
+
+        function handleVisibilityChange() {
+            if (document.hidden) {
+                showWarning();
+            }
+        }
+
+        function showWarning() {
+            document.getElementById('warningOverlay').style.display = 'flex';
+            warningShown = true;
+        }
+
+        function dismissWarning() {
+            document.getElementById('warningOverlay').style.display = 'none';
+            warningShown = false;
+        }
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (!warningShown) {
+                saveAnswer();
+                currentQuestion--;
+                showQuestion(currentQuestion);
+            }
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (!warningShown) {
+                saveAnswer();
+                currentQuestion++;
+                showQuestion(currentQuestion);
+            }
+        });
+
+        document.getElementById('markReviewBtn').addEventListener('click', () => {
+            if (!warningShown) {
+                markedForReview[currentQuestion] = !markedForReview[currentQuestion];
+                showQuestion(currentQuestion);
+            }
+        });
+
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            if (!warningShown) {
+                submitQuiz();
+            }
+        });
+
+        function saveAnswer() {
+            const selected = document.querySelector(`input[name="q${currentQuestion}"]:checked`);
+            answers[currentQuestion] = selected ? selected.value : null;
+        }
+
+        function submitQuiz() {
+            saveAnswer();
+            clearInterval(timerInterval);
+            let score = 0;
+            answers.forEach((ans, i) => {
+                if (ans === questions[i].answer) score++;
+            });
+            alert(`Quiz submitted! Your score: ${score}/${questions.length}`);
+            // Optionally, display detailed results
+        }
+
+        // Prevent context menu and some keys
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u') || (e.altKey && e.key === 'Tab')) {
+                e.preventDefault();
+            }
+        });
+
+        // Prevent window blur (tab switching)
+        window.addEventListener('blur', () => {
+            showWarning();
+        });
+
+        // Initialize
+        loadQuestions();
+        enterFullscreen();
+        startTimer();
+    </script>
+</body>
+</html>
